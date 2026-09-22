@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Presence Ledger — NZ Citizenship Days Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Domine:wght@400;500;600;700&family=Mona+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#e8e8e8;
+    --paper:#0f1419;
+    --paper-2:#151b27;
+    --line:#2a2f3a;
+    --brick:#e07856;
+    --brick-soft:#3d2622;
+    --green:#7fc184;
+    --green-soft:#1e2e24;
+    --amber:#d4a574;
+    --amber-soft:#332b16;
+    --cell-empty:#2a303c;
+    --cell-fill:#e8e8e8;
+    --radius:2px;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --ink:#0f1419;
+      --paper:#f8f7f5;
+      --paper-2:#efefeb;
+      --line:#d9d6cd;
+      --brick:#c15c42;
+      --brick-soft:#f5e6e1;
+      --green:#5c8e5d;
+      --green-soft:#e6f0e5;
+      --amber:#a6854f;
+      --amber-soft:#f5f0e8;
+      --cell-empty:#e5e2d8;
+      --cell-fill:#0f1419;
+    }
+  }
+  :root[data-theme="light"]{
+    --ink:#0f1419;
+    --paper:#f8f7f5;
+    --paper-2:#efefeb;
+    --line:#d9d6cd;
+    --brick:#c15c42;
+    --brick-soft:#f5e6e1;
+    --green:#5c8e5d;
+    --green-soft:#e6f0e5;
+    --amber:#a6854f;
+    --amber-soft:#f5f0e8;
+    --cell-empty:#e5e2d8;
+    --cell-fill:#0f1419;
+    box-sizing:border-box;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Mona Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size:14px;
+    line-height:1.55;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 20px 80px;}
+
+  header{border-bottom:2px solid var(--ink);padding-bottom:20px;margin-bottom:28px;}
+  h1{
+    font-family:'Domine', serif;
+    font-weight:700;
+    font-size:clamp(28px,4vw,40px);
+    margin:0 0 8px;
+    letter-spacing:-0.01em;
+  }
+  header p{margin:0;color:var(--ink);opacity:0.8;}
+  header p a{color:inherit;}
+
+  h2{
+    font-family:'Domine', serif;
+    font-weight:600;
+    font-size:20px;
+    margin:0 0 14px;
+  }
+
+  .grid{display:grid;grid-template-columns:340px 1fr;gap:0;border:1px solid var(--line);}
+  @media (max-width:840px){.grid{grid-template-columns:1fr;}}
+
+  .panel{padding:22px;}
+  .panel + .panel{border-left:1px solid var(--line);}
+  @media (max-width:840px){.panel + .panel{border-left:none;border-top:1px solid var(--line);}}
+
+  label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.65;margin-bottom:5px;}
+  input[type="date"], input[type="text"], textarea{
+    width:100%;
+    font-family:inherit;
+    font-size:14px;
+    color:var(--ink);
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:8px 10px;
+  }
+  textarea{min-height:84px;resize:vertical;}
+  .field{margin-bottom:16px;}
+  .field .hint{font-size:12px;opacity:0.6;margin-top:5px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+  button{
+    font-family:inherit;
+    font-size:13px;
+    cursor:pointer;
+    border-radius:var(--radius);
+    padding:9px 14px;
+    border:1px solid var(--ink);
+    background:var(--ink);
+    color:var(--paper);
+  }
+  button.secondary{background:transparent;color:var(--ink);}
+  button.ghost{border-color:var(--line);color:var(--ink);background:transparent;padding:4px 8px;font-size:12px;}
+  button:active{transform:translateY(1px);}
+
+  .divider{border:none;border-top:1px solid var(--line);margin:22px 0;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;opacity:0.6;padding:6px 4px;border-bottom:1px solid var(--line);}
+  td{padding:7px 4px;border-bottom:1px solid var(--line);}
+  tr:last-child td{border-bottom:none;}
+  td.num{font-variant-numeric:tabular-nums;text-align:right;}
+  .empty-row td{opacity:0.55;font-style:italic;padding:14px 4px;}
+
+  .stat-row{display:flex;justify-content:space-between;align-items:baseline;padding:12px 0;border-bottom:1px solid var(--line);}
+  .stat-row:last-child{border-bottom:none;}
+  .stat-label{opacity:0.75;}
+  .stat-value{font-family:'Domine',serif;font-weight:600;font-size:22px;font-variant-numeric:tabular-nums;}
+  .stat-sub{font-size:12px;opacity:0.55;margin-top:2px;}
+
+  .flag{
+    display:inline-block;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    padding:3px 8px;
+    border-radius:20px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .flag.ok{background:var(--green-soft);color:var(--green);}
+  .flag.warn{background:var(--amber-soft);color:var(--amber);}
+  .flag.bad{background:var(--brick-soft);color:var(--brick);}
+
+  .rule{border:1px solid var(--line);padding:16px 18px;margin-bottom:14px;}
+  .rule-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px;}
+  .rule-title{font-weight:500;}
+  .rule-detail{font-size:12.5px;opacity:0.75;}
+
+  .years{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);}
+  .year-row{display:grid;grid-template-columns:120px 1fr 90px 130px;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);}
+  .year-row:last-child{border-bottom:none;}
+  .year-row .label{opacity:0.7;font-size:12.5px;}
+  .bar-track{height:10px;background:var(--cell-empty);border-radius:20px;overflow:hidden;position:relative;}
+  .bar-fill{height:100%;background:var(--brick);}
+  .year-row .num{text-align:right;font-variant-numeric:tabular-nums;}
+  @media (max-width:600px){.year-row{grid-template-columns:70px 1fr 60px;}
+    .year-row .budget{display:none;}}
+
+  .heatmap-wrap{overflow-x:auto;padding-bottom:6px;}
+  .heatmap{display:flex;flex-direction:column;gap:3px;min-width:760px;}
+  .heat-year{display:flex;align-items:center;gap:8px;}
+  .heat-year .ylabel{width:70px;flex:0 0 70px;font-size:11px;opacity:0.65;text-align:right;}
+  .heat-cells{display:grid;grid-template-columns:repeat(366,1fr);gap:1.5px;flex:1;height:16px;}
+  .cell{background:var(--cell-empty);border-radius:1px;}
+  .cell.away{background:var(--cell-fill);}
+  .legend{display:flex;gap:16px;align-items:center;font-size:11px;opacity:0.65;margin-top:8px;}
+  .swatch{width:10px;height:10px;display:inline-block;border-radius:1px;margin-right:5px;vertical-align:-1px;}
+
+  .note{font-size:12.5px;opacity:0.75;border-left:2px solid var(--line);padding-left:12px;margin-top:14px;}
+
+  footer{margin-top:36px;font-size:12px;opacity:0.55;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Presence Ledger</h1>
+    <p>A working planner for the NZ citizenship presence requirement — track trips outside New Zealand and see how close you are to the 1,350-day, 240-day-per-year, and absence limits. Rules summarised from <a href="https://www.govt.nz/browse/passports-citizenship-and-identity/nz-citizenship/requirements-for-nz-citizenship/presence-requirements/" target="_blank" rel="noopener">govt.nz</a> — always confirm your actual eligibility with Immigration New Zealand before applying.</p>
+  </header>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Settings</h2>
+
+      <div class="field">
+        <label for="appDate">Planned application date</label>
+        <input type="date" id="appDate">
+        <div class="hint">The 5-year window is counted back from this date.</div>
+      </div>
+
+      <div class="field">
+        <label for="resDate">Residence granted date (optional)</label>
+        <input type="date" id="resDate">
+        <div class="hint">Only days after this date count as eligible presence.</div>
+      </div>
+
+      <hr class="divider">
+
+      <h2>Add a trip away</h2>
+      <div class="field row2">
+        <div>
+          <label for="tripStart">Departs NZ</label>
+          <input type="date" id="tripStart">
+        </div>
+        <div>
+          <label for="tripEnd">Returns to NZ</label>
+          <input type="date" id="tripEnd">
+        </div>
+      </div>
+      <button id="addTripBtn">Add trip</button>
+
+      <hr class="divider">
+
+      <div class="field">
+        <label for="bulkInput">Or paste several at once</label>
+        <textarea id="bulkInput" placeholder="2026-04-03 to 2026-04-06&#10;2026-08-14 to 2026-08-29"></textarea>
+        <div class="hint">One range per line, format YYYY-MM-DD to YYYY-MM-DD.</div>
+      </div>
+      <button id="bulkAddBtn" class="secondary">Add all lines</button>
+
+      <hr class="divider">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;">
+        <h2 style="margin:0 0 14px;">Trips logged</h2>
+        <button id="exportBtn" class="ghost" style="margin-bottom:14px;">Copy as text</button>
+      </div>
+      <table>
+        <thead><tr><th>Depart</th><th>Return</th><th class="num">Days</th><th></th></tr></thead>
+        <tbody id="tripTable"></tbody>
+      </table>
+      <div class="note">Each trip counts departure day through return day inclusive. Immigration NZ's own count of border-crossing days may differ slightly — treat this as a planning estimate, not the final word.</div>
+    </div>
+
+    <div class="panel">
+      <h2>Where you stand</h2>
+      <div id="summary"></div>
+
+      <hr class="divider">
+      <h2>Each 12 months, counting back from your application date</h2>
+      <div id="yearBlocks" class="years"></div>
+
+      <hr class="divider">
+      <h2>Tightest rolling 12 months</h2>
+      <div id="rollingRule"></div>
+
+      <hr class="divider">
+      <h2>Five-year map</h2>
+      <div class="heatmap-wrap">
+        <div class="heatmap" id="heatmap"></div>
+      </div>
+      <div class="legend">
+        <span><span class="swatch" style="background:var(--cell-empty)"></span>In NZ</span>
+        <span><span class="swatch" style="background:var(--cell-fill)"></span>Overseas</span>
+      </div>
+
+      <div class="note" id="eligibilityNote"></div>
+    </div>
+  </div>
+
+  <footer>Stored only in this browser. Nothing here is sent anywhere or reviewed by Immigration New Zealand.</footer>
+</div>
+
+<script>
+const DAY = 86400000;
+const store = {
+  get(key, fallback){
+    try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+    catch(e){ return fallback; }
+  },
+  set(key, val){
+    try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){}
+  }
+};
+
+function toUTC(dateStr){
+  const [y,m,d] = dateStr.split('-').map(Number);
+  return new Date(Date.UTC(y, m-1, d));
+}
+function fromUTC(date){
+  return date.toISOString().slice(0,10);
+}
+function addYearsUTC(date, n){
+  const d = new Date(date.getTime());
+  d.setUTCFullYear(d.getUTCFullYear() + n);
+  return d;
+}
+function fmt(dateStr){
+  const d = toUTC(dateStr);
+  return d.toLocaleDateString('en-NZ', {day:'numeric', month:'short', year:'numeric', timeZone:'UTC'});
+}
+function todayStr(){
+  return new Date().toISOString().slice(0,10);
+}
+
+let state = {
+  appDate: store.get('pl_appDate', todayStr()),
+  resDate: store.get('pl_resDate', ''),
+  trips: store.get('pl_trips', [])
+};
+
+function persist(){
+  store.set('pl_appDate', state.appDate);
+  store.set('pl_resDate', state.resDate);
+  store.set('pl_trips', state.trips);
+}
+
+function tripDayCount(t){
+  return Math.round((toUTC(t.end) - toUTC(t.start))/DAY) + 1;
+}
+
+function render(){
+  document.getElementById('appDate').value = state.appDate;
+  document.getElementById('resDate').value = state.resDate;
+
+  // trip table
+  const tbody = document.getElementById('tripTable');
+  const sorted = [...state.trips].sort((a,b)=> a.start.localeCompare(b.start));
+  if(sorted.length === 0){
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No trips logged yet.</td></tr>';
+  } else {
+    tbody.innerHTML = sorted.map(t => `
+      <tr>
+        <td>${fmt(t.start)}</td>
+        <td>${fmt(t.end)}</td>
+        <td class="num">${tripDayCount(t)}</td>
+        <td><button class="ghost" data-del="${t.id}">Remove</button></td>
+      </tr>`).join('');
+  }
+  tbody.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.trips = state.trips.filter(t => t.id !== btn.dataset.del);
+      persist(); render();
+    });
+  });
+
+  if(!state.appDate){ return; }
+
+  const appDate = toUTC(state.appDate);
+  const windowStart = addYearsUTC(appDate, -5);
+  const totalWindowDays = Math.round((appDate - windowStart)/DAY);
+
+  const resDate = state.resDate ? toUTC(state.resDate) : null;
+  const eligibleStart = resDate && resDate > windowStart ? resDate : windowStart;
+  const eligibleWindowDays = Math.max(0, Math.round((appDate - eligibleStart)/DAY));
+
+  // build per-day away flags across the full 5yr window (half-open [windowStart, appDate))
+  const flags = new Uint8Array(totalWindowDays);
+  state.trips.forEach(t=>{
+    let s = toUTC(t.start), e = new Date(toUTC(t.end).getTime() + DAY); // half-open end
+    if(e <= windowStart || s >= appDate) return;
+    if(s < windowStart) s = windowStart;
+    if(e > appDate) e = appDate;
+    const startIdx = Math.round((s - windowStart)/DAY);
+    const endIdx = Math.round((e - windowStart)/DAY);
+    for(let i=startIdx;i<endIdx;i++){ flags[i] = 1; }
+  });
+
+  const totalOverseas = flags.reduce((a,b)=>a+b,0);
+  // overseas days that fall before eligible start don't count against/for the ledger
+  const eligibleOffset = Math.round((eligibleStart - windowStart)/DAY);
+  let overseasEligible = 0;
+  for(let i=eligibleOffset;i<totalWindowDays;i++){ overseasEligible += flags[i]; }
+  const presentEligible = eligibleWindowDays - overseasEligible;
+
+  // ---- Summary ----
+  const summary = document.getElementById('summary');
+  const need1350 = 1350;
+  const presentPass = presentEligible >= need1350;
+  const fifteenMonthLimit = 456; // ~15 months, approx
+  const fifteenPass = totalOverseas <= fifteenMonthLimit;
+
+  summary.innerHTML = `
+    <div class="stat-row">
+      <div>
+        <div class="stat-label">Days present, this window</div>
+        <div class="stat-sub">of ${need1350} required across the 5 years</div>
+      </div>
+      <div style="text-align:right">
+        <div class="stat-value">${presentEligible}</div>
+        <span class="flag ${presentPass ? 'ok' : (presentEligible >= need1350-60 ? 'warn' : 'bad')}">${presentPass ? 'On track' : (need1350-presentEligible)+' short'}</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <div>
+        <div class="stat-label">Total days overseas, 5 years</div>
+        <div class="stat-sub">15-month guideline ≈ ${fifteenMonthLimit} days</div>
+      </div>
+      <div style="text-align:right">
+        <div class="stat-value">${totalOverseas}</div>
+        <span class="flag ${fifteenPass ? 'ok' : 'bad'}">${fifteenPass ? (fifteenMonthLimit-totalOverseas)+' left' : (totalOverseas-fifteenMonthLimit)+' over'}</span>
+      </div>
+    </div>
+    <div class="stat-row">
+      <div>
+        <div class="stat-label">Remaining overseas budget</div>
+        <div class="stat-sub">before breaching the 1,350-day rule</div>
+      </div>
+      <div style="text-align:right">
+        <div class="stat-value">${Math.max(0, eligibleWindowDays - need1350 - overseasEligible)}</div>
+      </div>
+    </div>
+  `;
+
+  // ---- Year blocks (5 sequential 12-month periods back from app date) ----
+  const yearBlocksEl = document.getElementById('yearBlocks');
+  let blockRows = '';
+  for(let k=0;k<5;k++){
+    const blockEnd = addYearsUTC(appDate, -k);
+    const blockStart = addYearsUTC(appDate, -(k+1));
+    const bs = Math.max(0, Math.round((blockStart - windowStart)/DAY));
+    const be = Math.round((blockEnd - windowStart)/DAY);
+    let away = 0;
+    for(let i=bs;i<be;i++){ away += flags[i]; }
+    const blockLen = be - bs;
+    const present = blockLen - away;
+    const pass = present >= 240;
+    const pct = Math.min(100, Math.round((away/blockLen)*100));
+    blockRows += `
+      <div class="year-row">
+        <div class="label">${fmt(fromUTC(blockStart))} – ${fmt(fromUTC(blockEnd))}</div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+        <div class="num">${away}d away</div>
+        <div class="budget"><span class="flag ${pass ? 'ok' : 'bad'}">${pass ? present+' present ✓' : (240-present)+' short'}</span></div>
+      </div>`;
+  }
+  yearBlocksEl.innerHTML = blockRows;
+
+  // ---- Rolling worst 12-month window (trailing 365 days) ----
+  const rollingEl = document.getElementById('rollingRule');
+  let maxAway = -1, maxIdx = 0;
+  if(totalWindowDays >= 365){
+    let sum = 0;
+    for(let i=0;i<365;i++) sum += flags[i];
+    maxAway = sum; maxIdx = 0;
+    for(let i=365;i<totalWindowDays;i++){
+      sum += flags[i] - flags[i-365];
+      if(sum > maxAway){ maxAway = sum; maxIdx = i-364; }
+    }
+  }
+  const absenceLimit = 122; // ~4 months
+  if(maxAway >= 0){
+    const wStart = new Date(windowStart.getTime() + maxIdx*DAY);
+    const wEnd = new Date(wStart.getTime() + 364*DAY);
+    const rollPass = maxAway <= absenceLimit;
+    rollingEl.innerHTML = `
+      <div class="rule">
+        <div class="rule-head">
+          <div class="rule-title">${fmt(fromUTC(wStart))} → ${fmt(fromUTC(wEnd))}</div>
+          <span class="flag ${rollPass ? 'ok' : 'bad'}">${maxAway} days away</span>
+        </div>
+        <div class="rule-detail">Your heaviest any-12-month stretch of overseas time. The guidance flags absences over roughly 4 months (~${absenceLimit} days) in any 12-month period — this is the window to watch when you're placing a new trip.</div>
+      </div>`;
+  } else {
+    rollingEl.innerHTML = `<div class="note">Set an application date at least 12 months after your window start to see this check.</div>`;
+  }
+
+  // ---- Heatmap ----
+  const heatmap = document.getElementById('heatmap');
+  let rowsHtml = '';
+  for(let k=4;k>=0;k--){
+    const rowStart = addYearsUTC(appDate, -(k+1));
+    const rowEnd = addYearsUTC(appDate, -k);
+    const rs = Math.max(0, Math.round((rowStart-windowStart)/DAY));
+    const re = Math.round((rowEnd-windowStart)/DAY);
+    let cells = '';
+    for(let i=rs;i<re;i++){
+      cells += `<div class="cell ${flags[i] ? 'away' : ''}"></div>`;
+    }
+    rowsHtml += `<div class="heat-year"><div class="ylabel">${fromUTC(rowStart).slice(0,7)}</div><div class="heat-cells">${cells}</div></div>`;
+  }
+  heatmap.innerHTML = rowsHtml;
+
+  // ---- Eligibility note ----
+  const noteEl = document.getElementById('eligibilityNote');
+  if(resDate && resDate > windowStart){
+    const earliest = addYearsUTC(resDate, 5);
+    noteEl.innerHTML = `Your residence began after the start of this 5-year window, so only ${eligibleWindowDays} of the ${totalWindowDays} days count as eligible presence. On current settings you couldn't apply before roughly <strong>${fmt(fromUTC(earliest))}</strong> — move the application date out to that point for an accurate read.`;
+  } else {
+    noteEl.innerHTML = `All figures assume you were a resident for the full 5-year window. Change the application date above to test different scenarios.`;
+  }
+}
+
+document.getElementById('appDate').addEventListener('change', e=>{
+  state.appDate = e.target.value || todayStr();
+  persist(); render();
+});
+document.getElementById('resDate').addEventListener('change', e=>{
+  state.resDate = e.target.value;
+  persist(); render();
+});
+
+function addTrip(startStr, endStr){
+  if(!startStr || !endStr) return false;
+  let s = startStr, e = endStr;
+  if(toUTC(e) < toUTC(s)) { [s,e] = [e,s]; }
+  state.trips.push({ id: 't'+Date.now()+Math.random().toString(36).slice(2,7), start:s, end:e });
+  return true;
+}
+
+document.getElementById('addTripBtn').addEventListener('click', ()=>{
+  const s = document.getElementById('tripStart').value;
+  const e = document.getElementById('tripEnd').value;
+  if(addTrip(s,e)){
+    persist(); render();
+    document.getElementById('tripStart').value='';
+    document.getElementById('tripEnd').value='';
+  }
+});
+
+document.getElementById('bulkAddBtn').addEventListener('click', ()=>{
+  const text = document.getElementById('bulkInput').value;
+  const re = /(\d{4}-\d{2}-\d{2})\s*(?:to|through|until|-|–|—)\s*(\d{4}-\d{2}-\d{2})/i;
+  let added = 0;
+  text.split('\n').forEach(line=>{
+    const m = line.match(re);
+    if(m){ if(addTrip(m[1], m[2])) added++; }
+  });
+  if(added){
+    persist(); render();
+    document.getElementById('bulkInput').value = '';
+  }
+});
+
+document.getElementById('exportBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('exportBtn');
+  const sorted = [...state.trips].sort((a,b)=> a.start.localeCompare(b.start));
+  const text = sorted.map(t => `${t.start} to ${t.end}`).join('\n');
+  if(!text){
+    btn.textContent = 'No trips yet';
+    setTimeout(()=>{ btn.textContent = 'Copy as text'; }, 1400);
+    return;
+  }
+  try{
+    await navigator.clipboard.writeText(text);
+    btn.textContent = 'Copied ✓';
+  }catch(e){
+    // fallback for browsers without clipboard API access in this context
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try{ document.execCommand('copy'); btn.textContent = 'Copied ✓'; }
+    catch(e2){ btn.textContent = 'Copy failed'; }
+    document.body.removeChild(ta);
+  }
+  setTimeout(()=>{ btn.textContent = 'Copy as text'; }, 1400);
+});
+
+render();
+</script>
+</body>
+</html>
