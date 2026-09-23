@@ -196,15 +196,16 @@
       <h2>Settings</h2>
 
       <div class="field">
-        <label for="appDate">Planned application date</label>
-        <input type="date" id="appDate">
-        <div class="hint">The 5-year window is counted back from this date.</div>
+        <label for="resDate">Residence granted date <span style="opacity:0.5;">(required)</span></label>
+        <input type="date" id="resDate" required>
+        <div class="hint">The date your permanent resident visa was granted. Only days after this count as eligible presence.</div>
       </div>
 
-      <div class="field">
-        <label for="resDate">Residence granted date (optional)</label>
-        <input type="date" id="resDate">
-        <div class="hint">Only days after this date count as eligible presence.</div>
+      <div class="field" id="earliestDateField" style="display:none;">
+        <label>Earliest possible application date</label>
+        <div style="font-family:'Domine',serif;font-weight:600;font-size:22px;padding:6px 0;" id="earliestDateValue"></div>
+        <div class="hint">The earliest date at which your logged trips clear all four rules at once — not simply residence date + 5 years, since a long absence stays inside the rolling window until it fully ages out.</div>
+        <div class="hint" id="earliestDateNote" style="color:var(--brick);"></div>
       </div>
 
       <hr class="divider">
@@ -305,13 +306,11 @@ function todayStr(){
 }
 
 let state = {
-  appDate: store.get('pl_appDate', todayStr()),
   resDate: store.get('pl_resDate', ''),
   trips: store.get('pl_trips', [])
 };
 
 function persist(){
-  store.set('pl_appDate', state.appDate);
   store.set('pl_resDate', state.resDate);
   store.set('pl_trips', state.trips);
 }
@@ -320,8 +319,92 @@ function tripDayCount(t){
   return Math.round((toUTC(t.end) - toUTC(t.start))/DAY) + 1;
 }
 
+const ABSENCE_LIMIT = 122;   // ~4 months, approx
+const FIFTEEN_MONTH_LIMIT = 456; // ~15 months, approx
+const PRESENT_TARGET = 1350;
+const BLOCK_TARGET = 240;
+
+// Searches forward from residence-date+5y for the earliest date at which
+// every rule (1,350 days, 240/year, rolling 4-month absence, 15-month total)
+// passes at once for the given trip list. A long absence stays inside the
+// rolling window until it fully ages out — it doesn't just "reset" at a
+// fixed point — so this has to be checked day by day rather than assumed.
+function computeEarliestDate(resDate, trips){
+  const minCandidate = addYearsUTC(resDate, 5);
+  if(trips.length === 0){
+    return { date: minCandidate, found: true };
+  }
+
+  const lastTripEnd = trips.reduce((mx, t) => {
+    const e = toUTC(t.end);
+    return e > mx ? e : mx;
+  }, resDate);
+
+  const horizonBase = lastTripEnd > minCandidate ? lastTripEnd : minCandidate;
+  const maxCandidate = addYearsUTC(horizonBase, 10); // generous search horizon
+
+  const spanDays = Math.round((maxCandidate - resDate)/DAY);
+  const flags = new Uint8Array(spanDays + 1);
+  trips.forEach(t=>{
+    let s = toUTC(t.start), e = new Date(toUTC(t.end).getTime() + DAY); // half-open
+    if(s < resDate) s = resDate;
+    if(e > maxCandidate) e = maxCandidate;
+    if(e <= s) return;
+    const si = Math.round((s - resDate)/DAY), ei = Math.round((e - resDate)/DAY);
+    for(let i=si;i<ei;i++){ flags[i] = 1; }
+  });
+
+  const prefix = new Int32Array(flags.length + 1);
+  for(let i=0;i<flags.length;i++){ prefix[i+1] = prefix[i] + flags[i]; }
+
+  const rollLen = flags.length - 365 + 1;
+  const rolling = rollLen > 0 ? new Int32Array(rollLen) : null;
+  if(rolling){
+    for(let i=0;i<rollLen;i++){ rolling[i] = prefix[i+365] - prefix[i]; }
+  }
+
+  const minIdx = Math.round((minCandidate - resDate)/DAY);
+  const maxIdx = Math.round((maxCandidate - resDate)/DAY);
+
+  for(let dIdx = minIdx; dIdx <= maxIdx; dIdx++){
+    const D = new Date(resDate.getTime() + dIdx*DAY);
+    const windowStartDate = addYearsUTC(D, -5);
+    let wsIdx = Math.round((windowStartDate - resDate)/DAY);
+    if(wsIdx < 0) wsIdx = 0;
+
+    const totalWindowDays = dIdx - wsIdx;
+    const overseasTotal = prefix[dIdx] - prefix[wsIdx];
+    const presentTotal = totalWindowDays - overseasTotal;
+    if(presentTotal < PRESENT_TARGET) continue;
+    if(overseasTotal > FIFTEEN_MONTH_LIMIT) continue;
+
+    let blocksOk = true;
+    for(let k=0;k<5;k++){
+      const be = addYearsUTC(D, -k), bs = addYearsUTC(D, -(k+1));
+      let beIdx = Math.round((be - resDate)/DAY), bsIdx = Math.round((bs - resDate)/DAY);
+      if(bsIdx < 0) bsIdx = 0;
+      if(beIdx > flags.length) beIdx = flags.length;
+      const blen = beIdx - bsIdx;
+      const bAway = prefix[beIdx] - prefix[bsIdx];
+      if(blen - bAway < BLOCK_TARGET){ blocksOk = false; break; }
+    }
+    if(!blocksOk) continue;
+
+    let rollOk = true;
+    if(rolling){
+      const hi = Math.min(dIdx - 365, rolling.length - 1);
+      for(let i=wsIdx;i<=hi;i++){
+        if(rolling[i] > ABSENCE_LIMIT){ rollOk = false; break; }
+      }
+    }
+    if(!rollOk) continue;
+
+    return { date: D, found: true };
+  }
+  return { date: null, found: false };
+}
+
 function render(){
-  document.getElementById('appDate').value = state.appDate;
   document.getElementById('resDate').value = state.resDate;
 
   // trip table
@@ -345,15 +428,30 @@ function render(){
     });
   });
 
-  if(!state.appDate){ return; }
+  const earliestField = document.getElementById('earliestDateField');
 
-  const appDate = toUTC(state.appDate);
+  if(!state.resDate){
+    earliestField.style.display = 'none';
+    document.getElementById('summary').innerHTML = '<div class="note">Enter your residence granted date to see your eligibility figures.</div>';
+    document.getElementById('yearBlocks').innerHTML = '';
+    document.getElementById('rollingRule').innerHTML = '';
+    document.getElementById('heatmap').innerHTML = '';
+    document.getElementById('eligibilityNote').innerHTML = '';
+    return;
+  }
+
+  const resDate = toUTC(state.resDate);
+  const earliestResult = computeEarliestDate(resDate, state.trips);
+  const appDate = earliestResult.date || addYearsUTC(resDate, 5);
   const windowStart = addYearsUTC(appDate, -5);
   const totalWindowDays = Math.round((appDate - windowStart)/DAY);
+  const eligibleWindowDays = totalWindowDays;
 
-  const resDate = state.resDate ? toUTC(state.resDate) : null;
-  const eligibleStart = resDate && resDate > windowStart ? resDate : windowStart;
-  const eligibleWindowDays = Math.max(0, Math.round((appDate - eligibleStart)/DAY));
+  earliestField.style.display = '';
+  document.getElementById('earliestDateValue').textContent = fmt(fromUTC(appDate));
+  document.getElementById('earliestDateNote').textContent = earliestResult.found
+    ? ''
+    : "Your logged trips don't clear every rule within the searched horizon — showing residence date + 5 years instead, with shortfalls flagged below.";
 
   // build per-day away flags across the full 5yr window (half-open [windowStart, appDate))
   const flags = new Uint8Array(totalWindowDays);
@@ -368,10 +466,7 @@ function render(){
   });
 
   const totalOverseas = flags.reduce((a,b)=>a+b,0);
-  // overseas days that fall before eligible start don't count against/for the ledger
-  const eligibleOffset = Math.round((eligibleStart - windowStart)/DAY);
-  let overseasEligible = 0;
-  for(let i=eligibleOffset;i<totalWindowDays;i++){ overseasEligible += flags[i]; }
+  const overseasEligible = totalOverseas;
   const presentEligible = eligibleWindowDays - overseasEligible;
 
   // ---- Summary ----
@@ -484,18 +579,9 @@ function render(){
 
   // ---- Eligibility note ----
   const noteEl = document.getElementById('eligibilityNote');
-  if(resDate && resDate > windowStart){
-    const earliest = addYearsUTC(resDate, 5);
-    noteEl.innerHTML = `Your residence began after the start of this 5-year window, so only ${eligibleWindowDays} of the ${totalWindowDays} days count as eligible presence. On current settings you couldn't apply before roughly <strong>${fmt(fromUTC(earliest))}</strong> — move the application date out to that point for an accurate read.`;
-  } else {
-    noteEl.innerHTML = `All figures assume you were a resident for the full 5-year window. Change the application date above to test different scenarios.`;
-  }
+  noteEl.innerHTML = `The earliest date above is the first point at which all four rules pass together for your logged trips. A long single absence can stay inside the rolling window for the full 5 years after it ends, so eligibility doesn't move in step with the calendar year — it moves in step with your trips ageing out of the window.`;
 }
 
-document.getElementById('appDate').addEventListener('change', e=>{
-  state.appDate = e.target.value || todayStr();
-  persist(); render();
-});
 document.getElementById('resDate').addEventListener('change', e=>{
   state.resDate = e.target.value;
   persist(); render();
