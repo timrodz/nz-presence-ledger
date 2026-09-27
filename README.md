@@ -5,7 +5,7 @@ A working planner for tracking progress toward New Zealand citizenship eligibili
 ## Features
 
 - **Easy trip logging** — Add trips by date picker or paste multiple dates at once
-- **Eligibility tracking** — Real-time calculation against all three NZ citizenship rules:
+- **Eligibility tracking** — Real-time calculation against all four NZ citizenship rules:
   - 1,350 days present across the full 5-year window
   - 240 days present in each 12-month period
   - No more than ~4 months away in any rolling 12-month window
@@ -25,7 +25,7 @@ Based on [Immigration New Zealand's presence requirements](https://www.govt.nz/b
 - Total overseas days against the 15-month guideline
 - Your remaining overseas budget before hitting the 1,350-day threshold
 
-Set your planned application date and add trips to see how much time you have left.
+Enter your residence-granted date and log your trips, and the app automatically works out your earliest possible application date — the first date all four rules pass at once. If you have a specific date in mind (a booked trip, a target ceremony), use the "Have a date in mind? Check it" tool to test that exact date against the same four rules.
 
 ## Stack
 
