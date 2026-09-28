@@ -6,236 +6,412 @@
 <title>Presence Ledger — NZ Citizenship Days Planner</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Domine:wght@400;500;600;700&family=Mona+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700;800&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#e8e8e8;
-    --paper:#0f1419;
-    --paper-2:#151b27;
-    --line:#2a2f3a;
-    --brick:#e07856;
-    --brick-soft:#3d2622;
-    --green:#7fc184;
-    --green-soft:#1e2e24;
-    --amber:#d4a574;
-    --amber-soft:#332b16;
-    --cell-empty:#2a303c;
-    --cell-fill:#e8e8e8;
-    --radius:2px;
+    /* Palette — light (default) */
+    --warm-white:#F4F3EF;
+    --warm-white-2:#EBEAE4;
+    --near-black:#242424;
+    --neutral-gray:#A6A6A0;
+    --signal-orange:#FF5A36;
+    --electric-blue:#49A9D8;
+    --acid-yellow:#E8E64A;
+    --soft-green:#8CCB77;
+
+    --bg:var(--warm-white);
+    --bg-panel:#FDFCFA;
+    --bg-inset:var(--warm-white-2);
+    --ink:var(--near-black);
+    --ink-soft:#6E6E68;
+    --line:#D8D6CE;
+    --line-strong:var(--near-black);
+
+    --accent:var(--signal-orange);
+    --ok:var(--soft-green);
+    --warn:var(--acid-yellow);
+    --bad:var(--signal-orange);
+    --info:var(--electric-blue);
+
+    --cell-empty:#E2E0D8;
+    --cell-fill:var(--near-black);
+
+    --radius-sm:3px;
+    --radius-md:6px;
+    --shadow-panel:0 1px 0 rgba(36,36,36,0.04);
   }
-  @media (prefers-color-scheme: light){
-    :root:not([data-theme="dark"]){
-      --ink:#0f1419;
-      --paper:#f8f7f5;
-      --paper-2:#efefeb;
-      --line:#d9d6cd;
-      --brick:#c15c42;
-      --brick-soft:#f5e6e1;
-      --green:#5c8e5d;
-      --green-soft:#e6f0e5;
-      --amber:#a6854f;
-      --amber-soft:#f5f0e8;
-      --cell-empty:#e5e2d8;
-      --cell-fill:#0f1419;
+  :root[data-theme="dark"]{
+    --bg:#1B1B19;
+    --bg-panel:#232320;
+    --bg-inset:#171715;
+    --ink:#F4F3EF;
+    --ink-soft:#96958D;
+    --line:#3A3A35;
+    --line-strong:#F4F3EF;
+
+    --cell-empty:#2E2E29;
+    --cell-fill:#F4F3EF;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#1B1B19;
+      --bg-panel:#232320;
+      --bg-inset:#171715;
+      --ink:#F4F3EF;
+      --ink-soft:#96958D;
+      --line:#3A3A35;
+      --line-strong:#F4F3EF;
+
+      --cell-empty:#2E2E29;
+      --cell-fill:#F4F3EF;
     }
   }
-  :root[data-theme="light"]{
-    --ink:#0f1419;
-    --paper:#f8f7f5;
-    --paper-2:#efefeb;
-    --line:#d9d6cd;
-    --brick:#c15c42;
-    --brick-soft:#f5e6e1;
-    --green:#5c8e5d;
-    --green-soft:#e6f0e5;
-    --amber:#a6854f;
-    --amber-soft:#f5f0e8;
-    --cell-empty:#e5e2d8;
-    --cell-fill:#0f1419;
-    box-sizing:border-box;
-    padding-top:env(safe-area-inset-top,0px);
-    padding-bottom:env(safe-area-inset-bottom,0px);
-  }
+
   *{box-sizing:border-box;}
   html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  html,body{max-width:100%;overflow-x:hidden;}
   body{
     margin:0;
-    background:var(--paper);
+    background:var(--bg);
     color:var(--ink);
-    font-family:'Mona Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family:'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-size:14px;
     line-height:1.55;
     padding-top:env(safe-area-inset-top,0px);
     padding-bottom:env(safe-area-inset-bottom,0px);
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(circle at 1px 1px, var(--line) 1px, transparent 0);
+    background-size:28px 28px;
+    background-attachment:fixed;
   }
-  .wrap{max-width:1180px;margin:0 auto;padding:32px 20px 80px;}
+  :root[data-theme="dark"] body{ background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0); }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) body{ background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0); } }
 
-  header{border-bottom:2px solid var(--ink);padding-bottom:20px;margin-bottom:28px;}
-  h1{
-    font-family:'Domine', serif;
-    font-weight:700;
-    font-size:clamp(28px,4vw,40px);
-    margin:0 0 8px;
-    letter-spacing:-0.01em;
-  }
-  header p{margin:0;color:var(--ink);opacity:0.8;}
-  header p a{color:inherit;}
+  .mono{font-family:'JetBrains Mono', ui-monospace, monospace;}
 
-  h2{
-    font-family:'Domine', serif;
-    font-weight:600;
-    font-size:20px;
-    margin:0 0 14px;
-  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 90px;min-width:0;}
 
-  .grid{display:grid;grid-template-columns:340px 1fr;gap:0;border:1px solid var(--line);}
-  @media (max-width:840px){.grid{grid-template-columns:1fr;}}
-
-  .panel{padding:22px;}
-  .panel + .panel{border-left:1px solid var(--line);}
-  @media (max-width:840px){.panel + .panel{border-left:none;border-top:1px solid var(--line);}}
-
-  label{display:block;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.65;margin-bottom:5px;}
-  input[type="date"], input[type="text"], textarea{
-    width:100%;
-    font-family:inherit;
-    font-size:14px;
-    color:var(--ink);
-    background:var(--paper-2);
+  /* ===== Header: instrument faceplate ===== */
+  header{
     border:1px solid var(--line);
-    border-radius:var(--radius);
-    padding:8px 10px;
+    border-radius:var(--radius-md);
+    background:var(--bg-panel);
+    padding:22px 24px;
+    margin-bottom:22px;
+    position:relative;
+    box-shadow:var(--shadow-panel);
   }
-  textarea{min-height:84px;resize:vertical;}
-  .field{margin-bottom:16px;}
-  .field .hint{font-size:12px;opacity:0.6;margin-top:5px;}
-  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-
-  button{
-    font-family:inherit;
-    font-size:13px;
-    cursor:pointer;
-    border-radius:var(--radius);
-    padding:9px 14px;
-    border:1px solid var(--ink);
-    background:var(--ink);
-    color:var(--paper);
+  .faceplate-row{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  .brand-block{display:flex;align-items:center;gap:14px;}
+  .brand-mark{
+    width:40px;height:40px;border-radius:var(--radius-sm);
+    background:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    flex:0 0 auto;
+    box-shadow:inset 0 -3px 0 rgba(0,0,0,0.18);
   }
-  button.secondary{background:transparent;color:var(--ink);}
-  button.ghost{border-color:var(--line);color:var(--ink);background:transparent;padding:4px 8px;font-size:12px;}
-  button:active{transform:translateY(1px);}
+  .brand-mark svg{width:20px;height:20px;}
+  h1{
+    font-family:'Archivo Expanded', sans-serif;
+    font-weight:800;
+    font-size:clamp(22px,3.4vw,30px);
+    margin:0;
+    letter-spacing:-0.01em;
+    text-transform:uppercase;
+  }
+  .model-tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.08em;
+    color:var(--ink-soft);
+    margin-top:3px;
+    text-transform:uppercase;
+  }
+  header p.desc{margin:14px 0 0;color:var(--ink);opacity:0.82;max-width:72ch;font-size:13.5px;}
+  header p.desc a{color:var(--ink);text-decoration-color:var(--accent);text-decoration-thickness:2px;}
 
-  .divider{border:none;border-top:1px solid var(--line);margin:22px 0;}
+  .status-lights{display:flex;gap:8px;align-items:center;flex:0 0 auto;}
+  .led{width:8px;height:8px;border-radius:50%;background:var(--line);}
+  .led.on{background:var(--soft-green);box-shadow:0 0 6px var(--soft-green);}
+  .led-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-soft);}
 
-  table{width:100%;border-collapse:collapse;font-size:13px;}
-  th{text-align:left;font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;opacity:0.6;padding:6px 4px;border-bottom:1px solid var(--line);}
-  td{padding:7px 4px;border-bottom:1px solid var(--line);}
-  tr:last-child td{border-bottom:none;}
-  td.num{font-variant-numeric:tabular-nums;text-align:right;}
-  .empty-row td{opacity:0.55;font-style:italic;padding:14px 4px;}
-
-  .stat-row{display:flex;justify-content:space-between;align-items:baseline;padding:12px 0;border-bottom:1px solid var(--line);}
-  .stat-row:last-child{border-bottom:none;}
-  .stat-label{opacity:0.75;}
-  .stat-value{font-family:'Domine',serif;font-weight:600;font-size:22px;font-variant-numeric:tabular-nums;}
-  .stat-sub{font-size:12px;opacity:0.55;margin-top:2px;}
-
-  .flag{
-    display:inline-block;
+  /* ===== Section labels (compact uppercase, technical) ===== */
+  .sec-label{
+    display:flex;align-items:center;gap:8px;
+    font-family:'JetBrains Mono', monospace;
     font-size:11px;
     text-transform:uppercase;
-    letter-spacing:0.05em;
-    padding:3px 8px;
-    border-radius:20px;
-    font-family:'IBM Plex Mono',monospace;
+    letter-spacing:0.1em;
+    color:var(--ink-soft);
+    margin:0 0 14px;
   }
-  .flag.ok{background:var(--green-soft);color:var(--green);}
-  .flag.warn{background:var(--amber-soft);color:var(--amber);}
-  .flag.bad{background:var(--brick-soft);color:var(--brick);}
+  .sec-label .idx{
+    width:18px;height:18px;border-radius:50%;
+    border:1px solid var(--line-strong);
+    display:flex;align-items:center;justify-content:center;
+    font-size:9.5px;line-height:1;color:var(--ink);flex:0 0 auto;
+    font-family:'JetBrains Mono', monospace;
+    padding-top:1px;
+    box-sizing:border-box;
+  }
+  h2{
+    font-family:'Archivo Expanded', sans-serif;
+    font-weight:700;
+    font-size:16px;
+    margin:0;
+    text-transform:uppercase;
+    letter-spacing:0.01em;
+  }
 
-  .rule{border:1px solid var(--line);padding:16px 18px;margin-bottom:14px;}
-  .rule-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:6px;}
-  .rule-title{font-weight:500;}
-  .rule-detail{font-size:12.5px;opacity:0.75;}
+  /* ===== Grid / panels — modular hardware layout ===== */
+  .grid{display:grid;grid-template-columns:360px 1fr;gap:16px;align-items:start;}
+  @media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr);}}
 
-  .years{display:flex;flex-direction:column;gap:0;border:1px solid var(--line);}
-  .year-row{display:grid;grid-template-columns:120px 1fr 90px 130px;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);}
-  .year-row:last-child{border-bottom:none;}
-  .year-row .label{opacity:0.7;font-size:12.5px;}
-  .bar-track{height:10px;background:var(--cell-empty);border-radius:20px;overflow:hidden;position:relative;}
-  .bar-fill{height:100%;background:var(--brick);}
-  .year-row .num{text-align:right;font-variant-numeric:tabular-nums;}
-  @media (max-width:600px){.year-row{grid-template-columns:70px 1fr 60px;}
+  .panel{
+    min-width:0;
+    padding:22px;
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    box-shadow:var(--shadow-panel);
+  }
+  .module{margin-bottom:16px;}
+  .module:last-child{margin-bottom:0;}
+
+  label{display:block;font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:0.07em;opacity:0.7;margin-bottom:6px;}
+  input[type="date"], input[type="text"], textarea{
+    width:100%;
+    font-family:'Archivo', sans-serif;
+    font-size:14px;
+    color:var(--ink);
+    background:var(--bg-inset);
+    border:1px solid var(--line);
+    border-radius:var(--radius-sm);
+    padding:9px 10px;
+    transition:border-color 0.12s ease, box-shadow 0.12s ease;
+  }
+  input[type="date"]:focus, input[type="text"]:focus, textarea:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+  textarea{min-height:84px;resize:vertical;font-family:'JetBrains Mono',monospace;font-size:12.5px;}
+  .field{margin-bottom:16px;min-width:0;}
+  .field .hint{font-size:11.5px;opacity:0.62;margin-top:6px;line-height:1.5;}
+  .row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;}
+  .row2 > div{min-width:0;}
+  input[type="date"]{min-width:0;}
+
+  /* ===== Buttons: square, tactile, pressed states ===== */
+  button{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    cursor:pointer;
+    border-radius:var(--radius-sm);
+    padding:11px 16px;
+    border:1px solid var(--line-strong);
+    background:var(--ink);
+    color:var(--bg);
+    transition:transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease;
+    box-shadow:0 2px 0 var(--line-strong);
+  }
+  button:hover{filter:brightness(1.08);}
+  button:active{transform:translateY(2px);box-shadow:0 0 0 var(--line-strong);}
+  button.secondary{background:var(--bg-panel);color:var(--ink);box-shadow:0 2px 0 var(--line);}
+  button.secondary:active{box-shadow:0 0 0 var(--line);}
+  button.ghost{border-color:var(--line);color:var(--ink-soft);background:transparent;padding:5px 10px;font-size:10.5px;box-shadow:none;}
+  button.ghost:active{transform:translateY(1px);}
+  button.accent{background:var(--accent);border-color:var(--accent);color:var(--near-black);box-shadow:0 2px 0 color-mix(in srgb, var(--accent) 60%, black);}
+  button.accent:active{box-shadow:0 0 0 color-mix(in srgb, var(--accent) 60%, black);}
+  button.full{width:100%;}
+
+  .divider{border:none;border-top:1px dashed var(--line);margin:20px 0;}
+
+  /* ===== Table ===== */
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;font-family:'JetBrains Mono',monospace;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.6;padding:7px 4px;border-bottom:1px solid var(--line-strong);}
+  td{padding:8px 4px;border-bottom:1px solid var(--line);}
+  tr:last-child td{border-bottom:none;}
+  td.num{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;text-align:right;}
+  .empty-row td{opacity:0.5;font-style:italic;padding:16px 4px;}
+
+  /* ===== Stat rows — panel-meter style ===== */
+  .stat-row{display:flex;justify-content:space-between;align-items:baseline;padding:14px 2px;border-bottom:1px solid var(--line);}
+  .stat-row:last-child{border-bottom:none;}
+  .stat-label{opacity:0.78;font-size:13px;}
+  .stat-value{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:26px;font-variant-numeric:tabular-nums;letter-spacing:-0.02em;}
+  .stat-sub{font-size:11.5px;opacity:0.55;margin-top:2px;}
+
+  /* ===== Flags / indicator chips ===== */
+  .flag{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    padding:4px 9px 4px 7px;
+    border-radius:20px;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:600;
+    border:1px solid transparent;
+  }
+  .flag::before{content:'';width:6px;height:6px;border-radius:50%;flex:0 0 auto;}
+  .flag.ok{background:color-mix(in srgb, var(--soft-green) 18%, transparent);color:color-mix(in srgb, var(--soft-green) 55%, var(--ink) 45%);border-color:color-mix(in srgb, var(--soft-green) 40%, transparent);}
+  .flag.ok::before{background:var(--soft-green);box-shadow:0 0 4px var(--soft-green);}
+  .flag.warn{background:color-mix(in srgb, var(--acid-yellow) 22%, transparent);color:color-mix(in srgb, var(--acid-yellow) 60%, var(--ink) 40%);border-color:color-mix(in srgb, var(--acid-yellow) 45%, transparent);}
+  .flag.warn::before{background:var(--acid-yellow);box-shadow:0 0 4px var(--acid-yellow);}
+  .flag.bad{background:color-mix(in srgb, var(--signal-orange) 16%, transparent);color:color-mix(in srgb, var(--signal-orange) 65%, var(--ink) 35%);border-color:color-mix(in srgb, var(--signal-orange) 40%, transparent);}
+  .flag.bad::before{background:var(--signal-orange);box-shadow:0 0 4px var(--signal-orange);}
+
+  /* ===== Rule cards ===== */
+  .rule{border:1px solid var(--line);border-radius:var(--radius-sm);padding:16px 18px;margin-bottom:12px;background:var(--bg-inset);}
+  .rule-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap;}
+  .rule-title{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:12.5px;}
+  .rule-detail{font-size:12px;opacity:0.72;line-height:1.55;}
+
+  /* ===== Year blocks — synth channel strip ===== */
+  .years{display:flex;flex-direction:column;gap:8px;}
+  .year-row{
+    display:grid;grid-template-columns:126px 1fr 66px 128px;gap:12px;align-items:center;
+    padding:11px 14px;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--bg-inset);
+  }
+  .year-row .label{opacity:0.72;font-size:11.5px;font-family:'JetBrains Mono',monospace;}
+  .bar-track{height:8px;background:var(--cell-empty);border-radius:20px;overflow:hidden;position:relative;border:1px solid var(--line);}
+  .bar-fill{height:100%;background:var(--accent);transition:width 0.3s ease;}
+  .year-row .num{text-align:right;font-variant-numeric:tabular-nums;font-family:'JetBrains Mono',monospace;font-size:12px;}
+  @media (max-width:600px){.year-row{grid-template-columns:64px 1fr 54px;}
     .year-row .budget{display:none;}}
 
+  /* ===== Heatmap ===== */
   .heatmap-wrap{overflow-x:auto;padding-bottom:6px;}
-  .heatmap{display:flex;flex-direction:column;gap:3px;min-width:760px;}
-  .heat-year{display:flex;align-items:center;gap:8px;}
-  .heat-year .ylabel{width:70px;flex:0 0 70px;font-size:11px;opacity:0.65;text-align:right;}
+  .heatmap{display:flex;flex-direction:column;gap:4px;}
+  .heatmap:not(:empty){min-width:760px;}
+  .heat-year{display:flex;align-items:center;gap:10px;}
+  .heat-year .ylabel{width:70px;flex:0 0 70px;font-size:10.5px;font-family:'JetBrains Mono',monospace;opacity:0.6;text-align:right;}
   .heat-cells{display:grid;grid-template-columns:repeat(366,1fr);gap:1.5px;flex:1;height:16px;}
   .cell{background:var(--cell-empty);border-radius:1px;}
-  .cell.away{background:var(--cell-fill);}
-  .legend{display:flex;gap:16px;align-items:center;font-size:11px;opacity:0.65;margin-top:8px;}
-  .swatch{width:10px;height:10px;display:inline-block;border-radius:1px;margin-right:5px;vertical-align:-1px;}
+  .cell.away{background:var(--accent);}
+  .legend{display:flex;gap:18px;align-items:center;font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:0.04em;opacity:0.65;margin-top:10px;}
+  .swatch{width:9px;height:9px;display:inline-block;border-radius:1px;margin-right:6px;vertical-align:-1px;}
 
-  .note{font-size:12.5px;opacity:0.75;border-left:2px solid var(--line);padding-left:12px;margin-top:14px;}
+  .note{font-size:12px;opacity:0.72;border-left:2px solid var(--accent);padding-left:12px;margin-top:14px;line-height:1.6;}
 
-  footer{margin-top:36px;font-size:12px;opacity:0.55;}
+  footer{
+    margin-top:22px;font-family:'JetBrains Mono',monospace;font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;opacity:0.5;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:0 4px;
+  }
+
+  /* ===== Theme toggle — dial-inspired ===== */
+  .theme-toggle{
+    display:flex;align-items:center;gap:0;
+    border:1px solid var(--line-strong);border-radius:20px;padding:2px;flex:0 0 auto;
+    background:var(--bg-inset);
+  }
+  .theme-toggle button{
+    border:none;box-shadow:none;background:transparent;color:var(--ink-soft);
+    padding:5px 11px;border-radius:18px;font-size:10px;
+  }
+  .theme-toggle button.active{background:var(--ink);color:var(--bg);}
+  .theme-toggle button:active{transform:none;}
+
+  .earliest-display{
+    font-family:'JetBrains Mono',monospace;font-weight:700;font-size:24px;padding:8px 0;letter-spacing:-0.01em;
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
 
   <header>
-    <h1>Presence Ledger</h1>
-    <p>A working planner for the NZ citizenship presence requirement — track trips outside New Zealand and see how close you are to the 1,350-day, 240-day-per-year, and absence limits. Rules summarised from <a href="https://www.govt.nz/browse/passports-citizenship-and-identity/nz-citizenship/requirements-for-nz-citizenship/presence-requirements/" target="_blank" rel="noopener">govt.nz</a> — always confirm your actual eligibility with Immigration New Zealand before applying.</p>
+    <div class="faceplate-row">
+      <div class="brand-block">
+        <div class="brand-mark">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="9" stroke="#242424" stroke-width="2"/>
+            <path d="M12 7v5l3.5 2" stroke="#242424" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Presence Ledger</h1>
+          <div class="model-tag">MODEL PL&#8209;01 · NZ CITIZENSHIP PRESENCE UNIT</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div class="status-lights">
+          <span class="led on"></span>
+          <span class="led-label">Local storage</span>
+        </div>
+        <div class="theme-toggle" id="themeToggle">
+          <button data-mode="light" class="active">Light</button>
+          <button data-mode="dark">Dark</button>
+        </div>
+      </div>
+    </div>
+    <p class="desc">A working planner for the NZ citizenship presence requirement — track trips outside New Zealand and see how close you are to the 1,350-day, 240-day-per-year, and absence limits. Rules summarised from <a href="https://www.govt.nz/browse/passports-citizenship-and-identity/nz-citizenship/requirements-for-nz-citizenship/presence-requirements/" target="_blank" rel="noopener">govt.nz</a> — always confirm your actual eligibility with Immigration New Zealand before applying.</p>
   </header>
 
   <div class="grid">
     <div class="panel">
-      <h2>Settings</h2>
+      <div class="sec-label"><span class="idx">1</span><h2>Settings</h2></div>
 
-      <div class="field">
-        <label for="resDate">Residence granted date <span style="opacity:0.5;">(required)</span></label>
-        <input type="date" id="resDate" required>
-        <div class="hint">The date your permanent resident visa was granted. Only days after this count as eligible presence.</div>
-      </div>
-
-      <div class="field" id="earliestDateField" style="display:none;">
-        <label>Earliest possible application date</label>
-        <div style="font-family:'Domine',serif;font-weight:600;font-size:22px;padding:6px 0;" id="earliestDateValue"></div>
-        <div class="hint">The earliest date at which your logged trips clear all four rules at once — not simply residence date + 5 years, since a long absence stays inside the rolling window until it fully ages out.</div>
-        <div class="hint" id="earliestDateNote" style="color:var(--brick);"></div>
-      </div>
-
-      <hr class="divider">
-
-      <h2>Add a trip away</h2>
-      <div class="field row2">
-        <div>
-          <label for="tripStart">Departs NZ</label>
-          <input type="date" id="tripStart">
+      <div class="module">
+        <div class="field">
+          <label for="resDate">Residence granted date <span style="opacity:0.5;text-transform:none;">(required)</span></label>
+          <input type="date" id="resDate" required>
+          <div class="hint">The date your permanent resident visa was granted. Only days after this count as eligible presence.</div>
         </div>
-        <div>
-          <label for="tripEnd">Returns to NZ</label>
-          <input type="date" id="tripEnd">
+
+        <div class="field" id="earliestDateField" style="display:none;">
+          <label>Earliest possible application date</label>
+          <div class="earliest-display" id="earliestDateValue"></div>
+          <div class="hint">The earliest date at which your logged trips clear all four rules at once — not simply residence date + 5 years, since a long absence stays inside the rolling window until it fully ages out.</div>
+          <div class="hint" id="earliestDateBinding"></div>
+          <div class="hint" id="earliestDateNote" style="color:var(--signal-orange);"></div>
+        </div>
+
+        <div class="field" id="checkDateField" style="display:none;">
+          <label for="checkDate">Have a date in mind? Check it</label>
+          <input type="date" id="checkDate">
+          <div class="hint">Have a specific application date in mind — a booked trip, a target ceremony? Test it against your logged trips here, separate from the earliest date above.</div>
+          <div id="checkDateResult"></div>
         </div>
       </div>
-      <button id="addTripBtn">Add trip</button>
 
       <hr class="divider">
 
-      <div class="field">
-        <label for="bulkInput">Or paste several at once</label>
-        <textarea id="bulkInput" placeholder="2026-04-03 to 2026-04-06&#10;2026-08-14 to 2026-08-29"></textarea>
-        <div class="hint">One range per line, format YYYY-MM-DD to YYYY-MM-DD.</div>
+      <div class="sec-label"><span class="idx">2</span><h2>Add a trip away</h2></div>
+      <div class="module">
+        <div class="field row2">
+          <div>
+            <label for="tripStart">Departs NZ</label>
+            <input type="date" id="tripStart">
+          </div>
+          <div>
+            <label for="tripEnd">Returns to NZ</label>
+            <input type="date" id="tripEnd">
+          </div>
+        </div>
+        <button id="addTripBtn" class="accent full">+ Add trip</button>
       </div>
-      <button id="bulkAddBtn" class="secondary">Add all lines</button>
 
       <hr class="divider">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;">
-        <h2 style="margin:0 0 14px;">Trips logged</h2>
-        <button id="exportBtn" class="ghost" style="margin-bottom:14px;">Copy as text</button>
+
+      <div class="module">
+        <div class="field">
+          <label for="bulkInput">Or paste several at once</label>
+          <textarea id="bulkInput" placeholder="2026-04-03 to 2026-04-06&#10;2026-08-14 to 2026-08-29"></textarea>
+          <div class="hint">One range per line, format YYYY-MM-DD to YYYY-MM-DD.</div>
+        </div>
+        <button id="bulkAddBtn" class="secondary full">Add all lines</button>
+      </div>
+
+      <hr class="divider">
+      <div class="sec-label" style="justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:8px;"><span class="idx">3</span><h2>Trips logged</h2></div>
+        <button id="exportBtn" class="ghost">Copy as text</button>
       </div>
       <table>
         <thead><tr><th>Depart</th><th>Return</th><th class="num">Days</th><th></th></tr></thead>
@@ -245,32 +421,35 @@
     </div>
 
     <div class="panel">
-      <h2>Where you stand</h2>
+      <div class="sec-label"><span class="idx">4</span><h2>Where you stand</h2></div>
       <div id="summary"></div>
 
       <hr class="divider">
-      <h2>Each 12 months, counting back from your application date</h2>
+      <div class="sec-label"><span class="idx">5</span><h2>Each 12 months, counting back from your application date</h2></div>
       <div id="yearBlocks" class="years"></div>
 
       <hr class="divider">
-      <h2>Tightest rolling 12 months</h2>
+      <div class="sec-label"><span class="idx">6</span><h2>Tightest rolling 12 months</h2></div>
       <div id="rollingRule"></div>
 
       <hr class="divider">
-      <h2>Five-year map</h2>
+      <div class="sec-label"><span class="idx">7</span><h2>Five-year map</h2></div>
       <div class="heatmap-wrap">
         <div class="heatmap" id="heatmap"></div>
       </div>
       <div class="legend">
         <span><span class="swatch" style="background:var(--cell-empty)"></span>In NZ</span>
-        <span><span class="swatch" style="background:var(--cell-fill)"></span>Overseas</span>
+        <span><span class="swatch" style="background:var(--accent)"></span>Overseas</span>
       </div>
 
       <div class="note" id="eligibilityNote"></div>
     </div>
   </div>
 
-  <footer>Stored only in this browser. Nothing here is sent anywhere or reviewed by Immigration New Zealand.</footer>
+  <footer>
+    <span>Stored only in this browser. Nothing here is sent anywhere or reviewed by Immigration New Zealand.</span>
+    <span class="mono">REV 2 · LOCAL-ONLY</span>
+  </footer>
 </div>
 
 <script>
@@ -324,6 +503,64 @@ const FIFTEEN_MONTH_LIMIT = 456; // ~15 months, approx
 const PRESENT_TARGET = 1350;
 const BLOCK_TARGET = 240;
 
+// Evaluates all four presence rules for a single candidate day index against
+// precomputed day-flags/prefix-sum/rolling-sum arrays, all anchored at epoch.
+// Always computes every rule (no short-circuiting) so callers get a full
+// per-rule breakdown — this is the single source of truth for rule logic,
+// shared by computeEarliestDate()'s search and the date-check tool.
+// `epoch` is the date that dIdx / array index 0 is measured from — it's the
+// real residence date when called from computeEarliestDate(), but a narrower
+// window start when called from evaluateCandidateDate(); either way it must
+// match whatever date the flags/prefix/rolling arrays were built against.
+function evaluateRulesForDate(dIdx, epoch, flags, prefix, rolling){
+  const D = new Date(epoch.getTime() + dIdx*DAY);
+  const windowStartDate = addYearsUTC(D, -5);
+  let wsIdx = Math.round((windowStartDate - epoch)/DAY);
+  if(wsIdx < 0) wsIdx = 0;
+
+  const totalWindowDays = dIdx - wsIdx;
+  const overseasTotal = prefix[dIdx] - prefix[wsIdx];
+  const presentTotal = totalWindowDays - overseasTotal;
+  const presentPass = presentTotal >= PRESENT_TARGET;
+  const fifteenPass = overseasTotal <= FIFTEEN_MONTH_LIMIT;
+
+  const blocks = [];
+  let blocksOk = true;
+  for(let k=0;k<5;k++){
+    const be = addYearsUTC(D, -k), bs = addYearsUTC(D, -(k+1));
+    let beIdx = Math.round((be - epoch)/DAY), bsIdx = Math.round((bs - epoch)/DAY);
+    if(bsIdx < 0) bsIdx = 0;
+    if(beIdx > flags.length) beIdx = flags.length;
+    const blen = beIdx - bsIdx;
+    const bAway = prefix[beIdx] - prefix[bsIdx];
+    const present = blen - bAway;
+    const pass = present >= BLOCK_TARGET;
+    if(!pass) blocksOk = false;
+    blocks.push({ start: bs, end: be, present, pass });
+  }
+
+  let rollingMaxAway = 0;
+  let rollPass = true;
+  if(rolling){
+    const hi = Math.min(dIdx - 365, rolling.length - 1);
+    for(let i=wsIdx;i<=hi;i++){
+      if(rolling[i] > rollingMaxAway) rollingMaxAway = rolling[i];
+      if(rolling[i] > ABSENCE_LIMIT) rollPass = false;
+    }
+  }
+
+  const allPass = presentPass && fifteenPass && blocksOk && rollPass;
+
+  return {
+    date: D, wsIdx,
+    presentTotal, presentPass,
+    overseasTotal, fifteenPass,
+    blocks, blocksOk,
+    rollingMaxAway, rollPass,
+    allPass
+  };
+}
+
 // Searches forward from residence-date+5y for the earliest date at which
 // every rule (1,350 days, 240/year, rolling 4-month absence, 15-month total)
 // passes at once for the given trip list. A long absence stays inside the
@@ -332,7 +569,7 @@ const BLOCK_TARGET = 240;
 function computeEarliestDate(resDate, trips){
   const minCandidate = addYearsUTC(resDate, 5);
   if(trips.length === 0){
-    return { date: minCandidate, found: true };
+    return { date: minCandidate, found: true, result: null };
   }
 
   const lastTripEnd = trips.reduce((mx, t) => {
@@ -367,41 +604,58 @@ function computeEarliestDate(resDate, trips){
   const maxIdx = Math.round((maxCandidate - resDate)/DAY);
 
   for(let dIdx = minIdx; dIdx <= maxIdx; dIdx++){
-    const D = new Date(resDate.getTime() + dIdx*DAY);
-    const windowStartDate = addYearsUTC(D, -5);
-    let wsIdx = Math.round((windowStartDate - resDate)/DAY);
-    if(wsIdx < 0) wsIdx = 0;
-
-    const totalWindowDays = dIdx - wsIdx;
-    const overseasTotal = prefix[dIdx] - prefix[wsIdx];
-    const presentTotal = totalWindowDays - overseasTotal;
-    if(presentTotal < PRESENT_TARGET) continue;
-    if(overseasTotal > FIFTEEN_MONTH_LIMIT) continue;
-
-    let blocksOk = true;
-    for(let k=0;k<5;k++){
-      const be = addYearsUTC(D, -k), bs = addYearsUTC(D, -(k+1));
-      let beIdx = Math.round((be - resDate)/DAY), bsIdx = Math.round((bs - resDate)/DAY);
-      if(bsIdx < 0) bsIdx = 0;
-      if(beIdx > flags.length) beIdx = flags.length;
-      const blen = beIdx - bsIdx;
-      const bAway = prefix[beIdx] - prefix[bsIdx];
-      if(blen - bAway < BLOCK_TARGET){ blocksOk = false; break; }
+    const result = evaluateRulesForDate(dIdx, resDate, flags, prefix, rolling);
+    if(result.allPass){
+      return { date: result.date, found: true, result };
     }
-    if(!blocksOk) continue;
-
-    let rollOk = true;
-    if(rolling){
-      const hi = Math.min(dIdx - 365, rolling.length - 1);
-      for(let i=wsIdx;i<=hi;i++){
-        if(rolling[i] > ABSENCE_LIMIT){ rollOk = false; break; }
-      }
-    }
-    if(!rollOk) continue;
-
-    return { date: D, found: true };
   }
-  return { date: null, found: false };
+  return { date: null, found: false, result: null };
+}
+
+// Evaluates a single user-chosen candidate application date against all four
+// rules, using the same evaluateRulesForDate() logic computeEarliestDate()
+// relies on — so the two can never silently disagree. Builds its own
+// day-flags/prefix-sum/rolling-sum arrays scoped to just [testDate-5y, testDate],
+// following the same half-open-interval convention used everywhere else
+// (trip end inclusive, internally [start, end+1day)).
+function evaluateCandidateDate(testDateStr, resDate, trips){
+  const minCandidate = addYearsUTC(resDate, 5);
+  const testDate = toUTC(testDateStr);
+
+  if(testDate < minCandidate){
+    return { tooEarly: true, minCandidate, result: null };
+  }
+
+  // Should-never-trigger safety net: the tooEarly guard above already ensures
+  // testDate >= resDate+5y, which means testDate-5y >= resDate always holds —
+  // this clamp exists only in case that invariant is ever broken upstream.
+  let windowStart = addYearsUTC(testDate, -5);
+  if(windowStart < resDate) windowStart = resDate;
+
+  const spanDays = Math.round((testDate - windowStart)/DAY);
+  const flags = new Uint8Array(spanDays + 1);
+  trips.forEach(t=>{
+    let s = toUTC(t.start), e = new Date(toUTC(t.end).getTime() + DAY); // half-open
+    if(s < windowStart) s = windowStart;
+    if(e > testDate) e = testDate;
+    if(e <= s) return;
+    const si = Math.round((s - windowStart)/DAY), ei = Math.round((e - windowStart)/DAY);
+    for(let i=si;i<ei;i++){ flags[i] = 1; }
+  });
+
+  const prefix = new Int32Array(flags.length + 1);
+  for(let i=0;i<flags.length;i++){ prefix[i+1] = prefix[i] + flags[i]; }
+
+  const rollLen = flags.length - 365 + 1;
+  const rolling = rollLen > 0 ? new Int32Array(rollLen) : null;
+  if(rolling){
+    for(let i=0;i<rollLen;i++){ rolling[i] = prefix[i+365] - prefix[i]; }
+  }
+
+  const dIdx = Math.round((testDate - windowStart)/DAY);
+  const result = evaluateRulesForDate(dIdx, windowStart, flags, prefix, rolling);
+
+  return { tooEarly: false, minCandidate, result };
 }
 
 function render(){
@@ -429,9 +683,11 @@ function render(){
   });
 
   const earliestField = document.getElementById('earliestDateField');
+  const checkField = document.getElementById('checkDateField');
 
   if(!state.resDate){
     earliestField.style.display = 'none';
+    checkField.style.display = 'none';
     document.getElementById('summary').innerHTML = '<div class="note">Enter your residence granted date to see your eligibility figures.</div>';
     document.getElementById('yearBlocks').innerHTML = '';
     document.getElementById('rollingRule').innerHTML = '';
@@ -448,10 +704,39 @@ function render(){
   const eligibleWindowDays = totalWindowDays;
 
   earliestField.style.display = '';
+  checkField.style.display = '';
   document.getElementById('earliestDateValue').textContent = fmt(fromUTC(appDate));
   document.getElementById('earliestDateNote').textContent = earliestResult.found
     ? ''
     : "Your logged trips don't clear every rule within the searched horizon — showing residence date + 5 years instead, with shortfalls flagged below.";
+
+  // ---- Name the binding rule: check the 5-year minimum itself, see what (if anything) fails there ----
+  const bindingEl = document.getElementById('earliestDateBinding');
+  const minCandidate = addYearsUTC(resDate, 5);
+  if(!earliestResult.found){
+    // Search exhausted its horizon (see earliestDateNote above) — appDate is just
+    // the 5y fallback here, not a real "no rule is binding" result. Don't claim
+    // otherwise, or this contradicts the note directly above it.
+    bindingEl.textContent = '';
+  } else if(fromUTC(appDate) === fromUTC(minCandidate)){
+    bindingEl.textContent = "No rule beyond the 5-year minimum is holding you back — this is simply residence date + 5 years.";
+  } else {
+    // atMin.result is always populated here (testDate === minCandidate is never
+    // "too early"), and at least one rule always fails at the minimum whenever
+    // appDate is later than it — so the "no named rule" fallback below is a
+    // should-never-trigger safety net, not a reachable case.
+    const atMin = evaluateCandidateDate(fromUTC(minCandidate), resDate, state.trips);
+    const failing = [];
+    if(atMin.result){
+      if(!atMin.result.presentPass) failing.push('the 1,350-day total');
+      if(!atMin.result.fifteenPass) failing.push('the 15-month total absence limit');
+      if(!atMin.result.blocksOk) failing.push('the 240-days-per-12-months rule');
+      if(!atMin.result.rollPass) failing.push('the rolling 4-month absence limit');
+    }
+    bindingEl.textContent = failing.length
+      ? `Held back beyond the 5-year minimum by: ${failing.join(', ')}.`
+      : "Held back beyond the 5-year minimum by one of your logged trips still ageing out of the rolling window.";
+  }
 
   // build per-day away flags across the full 5yr window (half-open [windowStart, appDate))
   const flags = new Uint8Array(totalWindowDays);
@@ -471,30 +756,28 @@ function render(){
 
   // ---- Summary ----
   const summary = document.getElementById('summary');
-  const need1350 = 1350;
-  const presentPass = presentEligible >= need1350;
-  const fifteenMonthLimit = 456; // ~15 months, approx
-  const fifteenPass = totalOverseas <= fifteenMonthLimit;
+  const presentPass = presentEligible >= PRESENT_TARGET;
+  const fifteenPass = totalOverseas <= FIFTEEN_MONTH_LIMIT;
 
   summary.innerHTML = `
     <div class="stat-row">
       <div>
         <div class="stat-label">Days present, this window</div>
-        <div class="stat-sub">of ${need1350} required across the 5 years</div>
+        <div class="stat-sub">of ${PRESENT_TARGET} required across the 5 years</div>
       </div>
       <div style="text-align:right">
         <div class="stat-value">${presentEligible}</div>
-        <span class="flag ${presentPass ? 'ok' : (presentEligible >= need1350-60 ? 'warn' : 'bad')}">${presentPass ? 'On track' : (need1350-presentEligible)+' short'}</span>
+        <span class="flag ${presentPass ? 'ok' : (presentEligible >= PRESENT_TARGET-60 ? 'warn' : 'bad')}">${presentPass ? 'On track' : (PRESENT_TARGET-presentEligible)+' short'}</span>
       </div>
     </div>
     <div class="stat-row">
       <div>
         <div class="stat-label">Total days overseas, 5 years</div>
-        <div class="stat-sub">15-month guideline ≈ ${fifteenMonthLimit} days</div>
+        <div class="stat-sub">15-month guideline ≈ ${FIFTEEN_MONTH_LIMIT} days</div>
       </div>
       <div style="text-align:right">
         <div class="stat-value">${totalOverseas}</div>
-        <span class="flag ${fifteenPass ? 'ok' : 'bad'}">${fifteenPass ? (fifteenMonthLimit-totalOverseas)+' left' : (totalOverseas-fifteenMonthLimit)+' over'}</span>
+        <span class="flag ${fifteenPass ? 'ok' : 'bad'}">${fifteenPass ? (FIFTEEN_MONTH_LIMIT-totalOverseas)+' left' : (totalOverseas-FIFTEEN_MONTH_LIMIT)+' over'}</span>
       </div>
     </div>
     <div class="stat-row">
@@ -503,7 +786,7 @@ function render(){
         <div class="stat-sub">before breaching the 1,350-day rule</div>
       </div>
       <div style="text-align:right">
-        <div class="stat-value">${Math.max(0, eligibleWindowDays - need1350 - overseasEligible)}</div>
+        <div class="stat-value">${Math.max(0, eligibleWindowDays - PRESENT_TARGET - overseasEligible)}</div>
       </div>
     </div>
   `;
@@ -520,14 +803,14 @@ function render(){
     for(let i=bs;i<be;i++){ away += flags[i]; }
     const blockLen = be - bs;
     const present = blockLen - away;
-    const pass = present >= 240;
+    const pass = present >= BLOCK_TARGET;
     const pct = Math.min(100, Math.round((away/blockLen)*100));
     blockRows += `
       <div class="year-row">
         <div class="label">${fmt(fromUTC(blockStart))} – ${fmt(fromUTC(blockEnd))}</div>
         <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
         <div class="num">${away}d away</div>
-        <div class="budget"><span class="flag ${pass ? 'ok' : 'bad'}">${pass ? present+' present ✓' : (240-present)+' short'}</span></div>
+        <div class="budget"><span class="flag ${pass ? 'ok' : 'bad'}">${pass ? present+' present' : (BLOCK_TARGET-present)+' short'}</span></div>
       </div>`;
   }
   yearBlocksEl.innerHTML = blockRows;
@@ -544,18 +827,17 @@ function render(){
       if(sum > maxAway){ maxAway = sum; maxIdx = i-364; }
     }
   }
-  const absenceLimit = 122; // ~4 months
   if(maxAway >= 0){
     const wStart = new Date(windowStart.getTime() + maxIdx*DAY);
     const wEnd = new Date(wStart.getTime() + 364*DAY);
-    const rollPass = maxAway <= absenceLimit;
+    const rollPass = maxAway <= ABSENCE_LIMIT;
     rollingEl.innerHTML = `
       <div class="rule">
         <div class="rule-head">
           <div class="rule-title">${fmt(fromUTC(wStart))} → ${fmt(fromUTC(wEnd))}</div>
           <span class="flag ${rollPass ? 'ok' : 'bad'}">${maxAway} days away</span>
         </div>
-        <div class="rule-detail">Your heaviest any-12-month stretch of overseas time. The guidance flags absences over roughly 4 months (~${absenceLimit} days) in any 12-month period — this is the window to watch when you're placing a new trip.</div>
+        <div class="rule-detail">Your heaviest any-12-month stretch of overseas time. The guidance flags absences over roughly 4 months (~${ABSENCE_LIMIT} days) in any 12-month period — this is the window to watch when you're placing a new trip.</div>
       </div>`;
   } else {
     rollingEl.innerHTML = `<div class="note">Set an application date at least 12 months after your window start to see this check.</div>`;
@@ -580,12 +862,68 @@ function render(){
   // ---- Eligibility note ----
   const noteEl = document.getElementById('eligibilityNote');
   noteEl.innerHTML = `The earliest date above is the first point at which all four rules pass together for your logged trips. A long single absence can stay inside the rolling window for the full 5 years after it ends, so eligibility doesn't move in step with the calendar year — it moves in step with your trips ageing out of the window.`;
+
+  renderCheckDateResult();
+}
+
+// Renders the pass/fail breakdown for whatever date is currently in the
+// #checkDate input, using evaluateCandidateDate() (which itself reuses
+// evaluateRulesForDate() — the same rule logic computeEarliestDate() uses).
+// Not persisted: purely a "try it now" read of the current input value.
+function renderCheckDateResult(){
+  const resultEl = document.getElementById('checkDateResult');
+  const checkDateStr = document.getElementById('checkDate').value;
+
+  if(!state.resDate || !checkDateStr){
+    resultEl.innerHTML = '';
+    return;
+  }
+
+  const resDate = toUTC(state.resDate);
+  const check = evaluateCandidateDate(checkDateStr, resDate, state.trips);
+
+  if(check.tooEarly){
+    resultEl.innerHTML = `
+      <div class="note" style="border-left-color:var(--signal-orange);margin-top:10px;">
+        This date is before you're eligible regardless of trips — the 1,350-day rule needs the full 5 years from your residence date to elapse first. The earliest possible date is <strong>${fmt(fromUTC(check.minCandidate))}</strong>.
+      </div>`;
+    return;
+  }
+
+  const r = check.result;
+  const worstBlock = r.blocks.reduce((worst, b) => (!b.pass && (!worst || b.present < worst.present)) ? b : worst, null);
+
+  resultEl.innerHTML = `
+    <div style="margin-top:10px;">
+      <div class="stat-row">
+        <div class="stat-label">1,350 days present (5-year total)</div>
+        <span class="flag ${r.presentPass ? 'ok' : 'bad'}">${r.presentTotal} days${r.presentPass ? '' : ' — ' + (PRESENT_TARGET - r.presentTotal) + ' short'}</span>
+      </div>
+      <div class="stat-row">
+        <div class="stat-label">240 days present, each 12 months</div>
+        <span class="flag ${r.blocksOk ? 'ok' : 'bad'}">${r.blocksOk ? 'All 5 pass' : (worstBlock ? worstBlock.present + ' short in one period' : 'Fails')}</span>
+      </div>
+      <div class="stat-row">
+        <div class="stat-label">Rolling 4-month absence limit</div>
+        <span class="flag ${r.rollPass ? 'ok' : 'bad'}">${r.rollingMaxAway} days, worst 12mo</span>
+      </div>
+      <div class="stat-row">
+        <div class="stat-label">15-month total absence limit</div>
+        <span class="flag ${r.fifteenPass ? 'ok' : 'bad'}">${r.overseasTotal} days overseas</span>
+      </div>
+    </div>
+    ${r.allPass
+      ? `<div class="note" style="border-left-color:var(--soft-green);">This date clears all four rules for your logged trips.</div>`
+      : `<div class="note" style="border-left-color:var(--signal-orange);">This date doesn't clear every rule yet. The earliest date that does, given your logged trips, is shown above.</div>`}
+  `;
 }
 
 document.getElementById('resDate').addEventListener('change', e=>{
   state.resDate = e.target.value;
   persist(); render();
 });
+
+document.getElementById('checkDate').addEventListener('change', renderCheckDateResult);
 
 function addTrip(startStr, endStr){
   if(!startStr || !endStr) return false;
@@ -630,7 +968,7 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
   }
   try{
     await navigator.clipboard.writeText(text);
-    btn.textContent = 'Copied ✓';
+    btn.textContent = 'Copied';
   }catch(e){
     // fallback for browsers without clipboard API access in this context
     const ta = document.createElement('textarea');
@@ -639,12 +977,30 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
     ta.style.opacity = '0';
     document.body.appendChild(ta);
     ta.select();
-    try{ document.execCommand('copy'); btn.textContent = 'Copied ✓'; }
+    try{ document.execCommand('copy'); btn.textContent = 'Copied'; }
     catch(e2){ btn.textContent = 'Copy failed'; }
     document.body.removeChild(ta);
   }
   setTimeout(()=>{ btn.textContent = 'Copy as text'; }, 1400);
 });
+
+// ---- Theme toggle ----
+const themeToggle = document.getElementById('themeToggle');
+function applyTheme(mode){
+  if(mode === 'system'){
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.setAttribute('data-theme', mode);
+  }
+  themeToggle.querySelectorAll('button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  store.set('pl_theme', mode);
+}
+themeToggle.querySelectorAll('button').forEach(b=>{
+  b.addEventListener('click', ()=> applyTheme(b.dataset.mode));
+});
+applyTheme(store.get('pl_theme', (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light'));
 
 render();
 </script>
